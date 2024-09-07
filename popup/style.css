@@ -1,0 +1,240 @@
+:root {
+    --bg-color: #3B1F3F;
+    --border: #1f0922;
+    --bg-highlight: #7d4d83;
+    --button-bg-highlight: #cc9ad4;
+}
+
+@font-face {
+    font-family: 'Pixeloid Sans';
+    src: url('../assets/fonts/PixeloidSans.eot');
+    src: url('../assets/fonts/PixeloidSans.eot?#iefix') format('embedded-opentype'),
+        url('../assets/fonts/PixeloidSans.woff2') format('woff2'),
+        url('../assets/fonts/PixeloidSans.woff') format('woff'),
+        url('../assets/fonts/PixeloidSans.ttf') format('ttf');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+html,
+body {
+    width: 480px;
+    height: 360px;
+    font-family: 'Pixeloid Sans';
+    background: var(--bg-color);
+    color: #fff;
+}
+
+body {
+    box-sizing: border-box;
+    margin: 0;
+}
+
+h1 {
+    margin: 0;
+}
+
+#header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-highlight);
+    padding: 6px 24px;
+    border-bottom: 3px solid var(--border);
+    
+}
+
+#scoreBox {
+    background: var(--bg-color);
+    padding: 8px 24px;
+    border: 2px solid var(--border);
+    box-shadow: -2px -2px 0px 0px #fff inset;
+    -webkit-box-shadow: -2px -2px 0px 0px #fff inset;
+    -moz-box-shadow: -2px -2px 0px 0px #fff inset;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+}
+
+#scoreBox img {
+    width: 16px;
+    height: 16px;
+}
+
+#scoreBox p {
+    margin: 0;
+    text-align: left;
+}
+
+button {
+    font-family: 'Pixeloid Sans';
+    cursor: pointer;
+    color: #fff;
+}
+
+#tabs {
+    margin: 12px 0;
+}
+
+#tabs>button {
+    border: 3px solid var(--border);
+    padding: 8px 16px;
+    background: var(--bg-highlight);
+    box-shadow: 2px 2px 0px 0px #fff inset;
+    -webkit-box-shadow: 2px 2px 0px 0px #fff inset;
+    -moz-box-shadow: 2px 2px 0px 0px #fff inset;
+}
+
+#tabs>button:hover {
+    background: var(--button-bg-highlight);
+
+}
+
+#tabs>button.selectedTab {
+    box-shadow: -2px -2px 0px 0px #fff inset;
+    -webkit-box-shadow: -2px -2px 0px 0px #fff inset;
+    -moz-box-shadow: -2px -2px 0px 0px #fff inset;
+    background: var(--button-bg-highlight);
+
+
+}
+
+#content {
+    padding: 4px 24px;
+}
+
+
+#my-critters {
+    display: none;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+#my-critters.open {
+    display: flex;
+}
+
+#critters-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#critters-list li {
+    padding: 0;
+    border: 3px solid var(--border);
+    width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: -3px;
+    margin-bottom: -3px;
+}
+
+#critters-list button {
+    height: 100%;
+    width: 100%;
+    background: var(--bg-highlight);
+    border: none;
+}
+
+#critters-list img {
+    height: 56px;
+    width: 56px;
+}
+
+#critter-focus {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    width: 116px;
+    text-align: center;
+}
+
+#focus-box {
+    width: 108px;
+    height: 108px;
+    border: 3px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#focus-box img {
+    height: 75%;
+    width: 75%;
+}
+
+#priceTag {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+#coinIcon {
+    height: 16px;
+    width: 16px;
+}
+
+#settings {
+    display: none;
+}
+
+#settings.open {
+    display: block;
+}
+
+#settings > form {
+    margin: 22px 0;
+}
+
+#settings .formItem {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+#settings .formItem label {
+    margin-right: 8px;
+}
+
+#settings .formItem input {
+    font-family: 'Pixeloid Sans';
+    background: var(--bg-highlight);
+    color: #fff;
+}
+
+#settings .formItem input {
+    border-bottom: 2px solid #fff;
+    border-right: 2px solid #fff;
+    border-top: 2px solid var(--border);
+    border-left: 2px solid var(--border);
+    padding: 8px;
+}
+
+#settings .settingsButton {
+    background: none;
+    border: 2px solid #fff;
+    margin-top: 12px;
+    margin-right: 12px;
+    color: #fff;
+    font-family: 'Pixeloid Sans';
+    padding: 4px 16px;
+    cursor: pointer;
+}
+
+#settings .settingsButton:hover {
+    background: #fff;
+    color: var(--bg-color);
+}
+
+
+
