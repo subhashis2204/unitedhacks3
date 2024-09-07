@@ -1,2 +1,2 @@
-# Pomodoro Browser Add-on
+# CrittersBreak Browser Add-on
 

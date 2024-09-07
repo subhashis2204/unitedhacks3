@@ -1,2 +1,1 @@
-// Add JavaScript for processes that run in the background
-// Examples of code to be included here are: context menus, notifications, etc.
+chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
