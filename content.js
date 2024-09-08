@@ -1,12 +1,15 @@
 chrome.runtime.sendMessage({ todo: "showPageAction" });
 
+
 chrome.runtime.onMessage.addListener(
     function (message, sender, sendResponse) {
         if (message.startContent == true) {
-            renderTab();
-            renderWindow();
-            renderDim();
-            loadTimer();
+           
+                renderTab();
+                renderWindow();
+                renderDim();
+                loadTimer();
+        
         }
     }
 );
@@ -15,20 +18,24 @@ window.addEventListener('load', async (event) => { // run once window has finish
     if (chrome.runtime.id == undefined) return; // to prevent Uncaught Error: Extension context invalidated
     var result = await chrome.runtime.sendMessage({ getState: true });
     if (result != -1) { // there is already a timer running; load extension content instead of waiting for start timer
-        renderTab();
-        renderWindow();
-        renderDim();
-        loadTimer();
+            renderTab();
+            renderWindow();
+            renderDim();
+            loadTimer();
+        
     }
 });
 
-const defaultBreakInterval = 0.1 * 60; //duration for working state
-const defaultBreakDuration = 5 * 60;
+const defaultBreakInterval = 25 * 60; //duration for working state
+const defaultBreakDuration = 5 * 60; //duration for break state
+const defaultCycles = 5 //number of work-break cycles
 
 var intervalTimer;
 
 const rewardInterval = 10000; //10 seconds
 var rewardTimer;
+
+
 
 async function renderTab() { // render tab for timer display
     var pixelFont = document.createElement('style');
@@ -90,7 +97,7 @@ async function renderTab() { // render tab for timer display
         })
     })
 
-document.getElementById("crittersBreak-timeDisplay").style.margin = "0";
+    document.getElementById("crittersBreak-timeDisplay").style.margin = "0";
 }
 
 function renderWindow() { // render window for sprite animation
@@ -210,9 +217,140 @@ function renderWindow() { // render window for sprite animation
 
 }
 
+function renderEndSessionWindow() {
+    // Create the end session window
+    let endSessionWindow = document.createElement("div");
+    endSessionWindow.setAttribute("id", "endSessionWindow");
+    document.body.appendChild(endSessionWindow);
+
+    let windowTitle = document.createElement("p");
+    windowTitle.innerHTML = "Well Done!";
+    windowTitle.style.margin = "6px 0";
+    endSessionWindow.appendChild(windowTitle);
+
+    // Style settings for the end session window
+    endSessionWindow.style.background = "#3B1F3F";
+    endSessionWindow.style.color = "#ffffff";
+    endSessionWindow.style.opacity = 0;
+    endSessionWindow.style.fontFamily = "Pixeloid Sans";
+    endSessionWindow.style.fontSize = "24px";
+    endSessionWindow.style.position = "fixed";
+    endSessionWindow.style.right = "0px";
+    endSessionWindow.style.top = "20px";
+    endSessionWindow.style.width = "240px";
+    endSessionWindow.style.height = "280px";
+    endSessionWindow.style.padding = "22px";
+    endSessionWindow.style.boxSizing = "border-box"
+    endSessionWindow.style.borderRadius = "5px 0 0 5px";
+    endSessionWindow.style.display = 'none';
+    endSessionWindow.style.flexDirection = "column"
+    endSessionWindow.style.justifyContent = "center";
+    endSessionWindow.style.alignItems = "center";
+    endSessionWindow.style.boxShadow = "rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px"
+    endSessionWindow.style.zIndex = 2147483647;
+    endSessionWindow.style.textAlign = "center"
+
+    let critterSprite = document.createElement("img");
+    endSessionWindow.appendChild(critterSprite);
+    chrome.storage.sync.get("critters").then((result) => {
+        chrome.storage.sync.get("activeCritter").then((res) => {
+            critterSprite.src = chrome.runtime.getURL(`assets/critters/${result.critters[res.activeCritter].folder}/thumbnail.png`);
+        })
+        critterSprite.style.height = "60px";
+        critterSprite.style.margin = "12px 0";
+
+    })
+
+
+    let cyclesStat = document.createElement("div");
+    endSessionWindow.appendChild(cyclesStat);
+    cyclesStat.style.display = "flex";
+    cyclesStat.style.alignItems = "center";
+    cyclesStat.style.justifyContent = "space-between"
+    cyclesStat.style.fontSize = "14px";
+    cyclesStat.style.width = "100%";
+    let cyclesLabel = document.createElement("p");
+    cyclesLabel.innerHTML = "Cycles completed:"
+    cyclesStat.appendChild(cyclesLabel);
+    cyclesLabel.style.margin = "4px 0";
+    let cyclesCompleted = document.createElement("p");
+    cyclesCompleted.style.color = "#f3b839";
+    cyclesCompleted.style.margin = "4px 0";
+    chrome.storage.sync.get("settings").then((result) => {
+        cyclesCompleted.innerHTML = result.settings.cyclesNum;
+        cyclesStat.appendChild(cyclesCompleted);
+
+    })
+    let coinsStat = document.createElement("div");
+    coinsStat.style.alignItems = "center";
+    endSessionWindow.appendChild(coinsStat);
+    coinsStat.style.display = "flex";
+    coinsStat.style.justifyContent = "space-between"
+    coinsStat.style.fontSize = "14px";
+    coinsStat.style.width = "100%";
+    let coinsLabel = document.createElement("p");
+    coinsLabel.innerHTML = "Coins earned:"
+    coinsStat.appendChild(coinsLabel);
+    coinsLabel.style.margin = "4px 0";
+    let coinsNum = document.createElement("p");
+    coinsNum.style.color = "#f3b839";
+    coinsNum.style.margin = "4px 0";
+    chrome.storage.sync.get("coinsEarned").then((result) => {
+        coinsNum.innerHTML = result.coinsEarned;
+        coinsStat.appendChild(coinsNum);
+    })
+
+    let closeButton = document.createElement("button");
+    closeButton.innerHTML = "Ok"
+    closeButton.style.width = "100%";
+    closeButton.style.color = "#fff";
+    closeButton.style.fontFamily = "Pixeloid Sans";
+    closeButton.style.cursor = "pointer";
+    closeButton.style.border = "3px solid #1f0922";
+    closeButton.style.margin = "12px 0";
+    closeButton.style.backgroundColor = "#7d4d83";
+    closeButton.style.padding = "4px 8px";
+    endSessionWindow.appendChild(closeButton);
+
+    closeButton.addEventListener("click", hideEndSessionWindow);
+}
+
+function showEndSessionWindow() {
+    var endSessionWindow = document.getElementById("endSessionWindow");
+    if (endSessionWindow.style.opacity < 0.1) {
+        endSessionWindow.style.display = 'flex';
+        var op = parseFloat(endSessionWindow.style.opacity);
+        var timer = setInterval(function () {
+            if (op >= 1) {
+                clearInterval(timer);
+            }
+            endSessionWindow.style.opacity = op;
+            endSessionWindow.style.filter = 'alpha(opacity=' + op * 100 + ")";
+            op += 0.1;
+        }, 50);
+    }
+}
+
+function hideEndSessionWindow() {
+    var endSessionWindow = document.getElementById("endSessionWindow");
+    if (endSessionWindow.style.opacity > 0.9) {
+        var op = parseFloat(endSessionWindow.style.opacity);
+        var timer = setInterval(function () {
+            if (op <= 0.1) {
+                clearInterval(timer);
+                endSessionWindow.style.display = 'none';
+            }
+            endSessionWindow.style.opacity = op;
+            endSessionWindow.style.filter = 'alpha(opacity=' + op * 100 + ")";
+            op -= 0.1;
+        }, 50);
+    }
+}
+
+
 function mouseOnCritter() {
     let sprite = document.getElementById("crittersbreak-critterSprite");
-   
+
     chrome.storage.sync.get("critters").then((result) => {
         chrome.storage.sync.get("activeCritter").then((res) => {
             sprite.src = chrome.runtime.getURL(`assets/critters/${result.critters[res.activeCritter].folder}/playing.gif`);
@@ -278,7 +416,7 @@ async function dimScreen() {
         elDim.style.display = 'block';
         var op = parseFloat(elDim.style.opacity);  // initial opacity
         intervalTimer = setInterval(function () {
-            if (op >= 0.95) {
+            if (op >= 0.90) {
                 clearInterval(intervalTimer);
             }
             elDim.style.opacity = op;
@@ -382,13 +520,56 @@ async function startTimer() {
             if (state == 0) { // transition to break
                 toBreak();
                 chrome.runtime.sendMessage({ startTimer: true, timerState: 1, timerTime: await stateToTime(1) });
-            } else { // transition to work
-                toWork();
-                chrome.runtime.sendMessage({ startTimer: true, timerState: 0, timerTime: await stateToTime(0) });
+                chrome.storage.sync.get('currCycle').then((result) => {
+                    let currentCycle = result.currCycle;
+                    chrome.storage.sync.set({ currCycle: currentCycle + 1 });
+                    startTimer();
+
+                })
+
+            } else { // check whether user has reached stated number of cycles
+                var totalCycles = 0;
+                var currCycle = 0;
+
+                chrome.storage.sync.get('settings').then((result) => {
+                    totalCycles = result.settings.cyclesNum;
+                    chrome.storage.sync.get('currCycle').then(async (result) => {
+                        currCycle = result.currCycle;
+                        if (currCycle >= totalCycles) {
+                            chrome.storage.sync.set({ currCycle: 0 });
+                            renderEndSessionWindow();
+                            showEndSessionWindow();
+                            // Remove the timer tab
+                            var timerTab = document.getElementById("crittersbreak-tab");
+                            if (timerTab) {
+                                timerTab.parentNode.removeChild(timerTab);
+                            }
+
+                            // Remove the critter window
+                            var critterWindow = document.getElementById("crittersbreak-window");
+                            if (critterWindow) {
+                                critterWindow.parentNode.removeChild(critterWindow);
+                            }
+                            brightenScreen();
+                            chrome.runtime.sendMessage({ startTimer: false});
+                            chrome.runtime.sendMessage({ endContent: true});
+                            clearInterval(timer);
+                            clearInterval(rewardTimer);
+
+                        } else { //back to work!
+                            toWork();
+                            chrome.runtime.sendMessage({ startTimer: true, timerState: 0, timerTime: await stateToTime(0) });
+                            startTimer();
+
+                        }
+                    });
+                });
+
+
+
             }
 
             clearInterval(timer);
-            startTimer();
         }
     }, 100); // more frequent refresh rate in case of lag
 }
