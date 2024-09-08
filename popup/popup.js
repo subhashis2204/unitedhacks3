@@ -37,10 +37,44 @@ window.addEventListener("load", async event => {
     state = await chrome.runtime.sendMessage({ getState: true });
     if (state != -1) { // already a timer running; cannot start timer
         document.querySelector('input[type=button]').classList.add("disabled");
+        document.getElementById("startButton").value = "Session has started"
     } else {
-        document.querySelector('input[type=button]').addEventListener("click", startContent);
+        document.querySelector('input[type=button]').addEventListener("click", function () {
+            if (document.getElementById("startButton").classList.contains("buy")) {
+                document.getElementById("startButton").classList.remove("buy");
+                buyCritter();
+            } else if (!document.getElementById("startButton").classList.contains("no-buy")) {
+                startContent();
+            }
+
+        });
+
     }
 })
+
+function buyCritter() {
+    var critterIndex;
+    chrome.storage.sync.get("activeCritter").then((result) => {
+        critterIndex = result.activeCritter;
+        document.getElementById(`thumbnail-${critterIndex}`).classList.remove("locked");
+        document.getElementById(critterList[critterIndex].folder).classList.remove("locked");
+        chrome.storage.sync.get("critters").then((res) => {
+            var crittersArr = res.critters;
+            crittersArr[critterIndex].status = "unlocked"
+            chrome.storage.sync.set({ critters: crittersArr })
+            critterList = crittersArr;
+            chrome.storage.sync.get("coins").then((coinRes) => {
+                chrome.storage.sync.set({ coins: coinRes.coins - crittersArr[critterIndex].cost });
+                document.getElementById("coinText").innerHTML = `Coins: ${coinRes.coins - crittersArr[critterIndex].cost}`;
+            })
+
+        })
+    })
+    document.getElementById("critter-preview").classList.remove("locked");
+    document.getElementById("focus-box").classList.remove("locked");
+    document.getElementById("startButton").value = "Start Session!";
+    document.getElementById("priceTag").innerHTML = "Unlocked";
+}
 
 function openTab(tabName) {
     if (document.getElementsByClassName("open")[0].id != tabName) {
@@ -87,12 +121,14 @@ function startContent() {
     });
     document.querySelector('input[type=button]').removeEventListener("click", startContent);
     document.querySelector('input[type=button]').classList.add("disabled");
-    chrome.storage.sync.set({coinsEarned: 0});
+    document.getElementById("startButton").value = "Session has started"
+
+    chrome.storage.sync.set({ coinsEarned: 0 });
 }
 
 const retrieveCoins = () => {
     chrome.storage.sync.get("coins").then((result) => {
-        
+
         if (result.coins === undefined) {
             document.getElementById("coinText").innerHTML = `Coins: 0`
             chrome.storage.sync.set({ coins: 0 })
@@ -108,25 +144,32 @@ const updateActiveCritter = (newCritter) => {
     document.getElementById("critter-preview").src = `../assets/critters/${defaultCritters[newCritter].folder}/thumbnail.png`
     document.getElementById("focus-critter-name").innerHTML = defaultCritters[newCritter].name
     if (critterList[newCritter].status === "locked") {
-        document.getElementById("priceTag").innerHTML = `Cost: ${critterList[activeCritter].cost}` + `<img src="../assets/coin.png" alt="coin" id="coinIcon" />`
+        document.getElementById("priceTag").innerHTML = `Cost: ${critterList[newCritter].cost}` + `<img src="../assets/coin.png" alt="coin" id="coinIcon" />`
         document.getElementById("startButton").value = "Buy Critter";
-        document.getElementById("startButton").classList.add("buy");
         document.getElementById("critter-preview").classList.add("locked");
         document.getElementById("focus-box").classList.add("locked");
+        chrome.storage.sync.get("coins").then((result) => {
+            if (result.coins >= critterList[newCritter].cost) {
+                document.getElementById("startButton").classList.add("buy");
+            } else {
+                document.getElementById("startButton").classList.add("no-buy");
+            }
+        })
+
 
 
     } else {
         document.getElementById("priceTag").innerHTML = "Unlocked"
         document.getElementById("startButton").value = "Start Session!";
         document.getElementById("startButton").classList.remove("buy");
+        document.getElementById("startButton").classList.remove("no-buy");
         document.getElementById("critter-preview").classList.remove("locked");
         document.getElementById("focus-box").classList.remove("locked");
+
     }
 
 
-    chrome.storage.sync.set({ activeCritter: newCritter }, () => {
-        console.log("Active critter updated:", newCritter);
-    });
+    chrome.storage.sync.set({ activeCritter: newCritter })
 }
 
 
@@ -159,14 +202,20 @@ const initCritterList = () => {
                 document.getElementById("focus-box").classList.add("locked");
                 document.getElementById("priceTag").innerHTML = `Cost: ${critterList[activeCritter].cost}` + `<img src="../assets/coin.png" alt="coin" id="coinIcon" />`
                 document.getElementById("startButton").value = "Buy Critter";
-                document.getElementById("startButton").classList.add("buy");
-
+                chrome.storage.sync.get("coins").then((result) => {
+                    if (result.coins >= critterList[activeCritter].cost) {
+                        document.getElementById("startButton").classList.add("buy");
+                    } else {
+                        document.getElementById("startButton").classList.add("no-buy");
+                    }
+                })
             } else {
                 document.getElementById("priceTag").innerHTML = "Unlocked";
                 document.getElementById("critter-preview").classList.remove("locked");
                 document.getElementById("focus-box").classList.remove("locked");
+                document.getElementById("startButton").classList.remove("no-buy");
+                document.getElementById("startButton").classList.remove("buy");
                 document.getElementById("startButton").value = "Start Session!";
-
 
             }
 
@@ -176,6 +225,7 @@ const initCritterList = () => {
                     const thumbnail = document.createElement("img");
                     thumbnail.src = `../assets/critters/${critterList[i].folder}/thumbnail.png`
                     thumbnail.setAttribute("class", ((critterList[i].status === "locked") ? "locked" : ""))
+                    thumbnail.setAttribute("id", `thumbnail-${i}`)
                     const btn = document.createElement("button");
                     btn.setAttribute("id", critterList[i].folder);
                     if (i === activeCritter) {
@@ -184,7 +234,6 @@ const initCritterList = () => {
                     if (critterList[i].status === "locked") {
                         btn.classList.add("locked");
                     }
-                    btn.classList.add("critter-btn");
                     btn.addEventListener("click", function (index) {
                         return function () {
                             updateActiveCritter(index);

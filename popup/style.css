@@ -266,6 +266,25 @@ button {
     background: var(--accent-light);
 }
 
+#startButton.disabled {
+    filter: grayscale(0.7);
+    cursor: not-allowed;
+}
+
+#startButton.disabled:hover {
+    background: var(--bg-highlight);
+}
+
+#startButton.no-buy {
+    filter: grayscale(0.7);
+    cursor: not-allowed;
+    background: var(--accent);
+}
+
+#startButton.no-buy:hover {
+    background: var(--accent);
+}
+
 #settings {
     display: none;
 }

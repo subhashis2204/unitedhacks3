@@ -1,7 +1,7 @@
 chrome.runtime.sendMessage({ todo: "showPageAction" });
 
 chrome.runtime.onMessage.addListener(
-    function(message, sender, sendResponse) {
+    function (message, sender, sendResponse) {
         if (message.startContent == true) {
             renderTab();
             renderWindow();
@@ -33,7 +33,7 @@ var rewardTimer;
 async function renderTab() { // render tab for timer display
     var pixelFont = document.createElement('style');
     pixelFont.textContent = '@font-face { font-family: Pixeloid Sans;'
-                            + 'src: url("' + chrome.runtime.getURL('assets/fonts/PixeloidSans.woff') + '"); }';
+        + 'src: url("' + chrome.runtime.getURL('assets/fonts/PixeloidSans.woff') + '"); }';
     document.head.appendChild(pixelFont);
 
     let tabDiv = document.createElement("div");
@@ -73,8 +73,6 @@ async function renderTab() { // render tab for timer display
     let tabIcon = document.createElement("div");
     tabIcon.setAttribute("id", "crittersbreak-tabIcon");
     tabDiv.appendChild(tabIcon);
-    tabIcon.innerHTML = "<img src=\""+ chrome.runtime.getURL('assets/critters/sir-teddy/thumbnail.png') + "\">";
-    tabIcon.getElementsByTagName("img")[0].style.height = "30px";
     tabIcon.style.backgroundColor = "#3B1F3F"
     tabIcon.style.width = "32px";
     tabIcon.style.height = "32px";
@@ -85,7 +83,14 @@ async function renderTab() { // render tab for timer display
     tabIcon.style.left = "-12px";
     tabIcon.style.display = "none";
 
-    document.getElementById("crittersBreak-timeDisplay").style.margin = "0";
+    chrome.storage.sync.get("critters").then((result) => {
+        chrome.storage.sync.get("activeCritter").then((res) => {
+            tabIcon.innerHTML = "<img src=\"" + chrome.runtime.getURL(`assets/critters/${result.critters[res.activeCritter].folder}/thumbnail.png`) + "\">";
+            tabIcon.getElementsByTagName("img")[0].style.height = "30px";
+        })
+    })
+
+document.getElementById("crittersBreak-timeDisplay").style.margin = "0";
 }
 
 function renderWindow() { // render window for sprite animation
@@ -161,19 +166,19 @@ function renderWindow() { // render window for sprite animation
     scoreDiv.style.borderRadius = "4px";
     critterBox.appendChild(scoreDiv);
 
-    let scoreText =  document.createElement("p");
+    let scoreText = document.createElement("p");
     scoreText.innerHTML = "+0";
     scoreText.style.fontSize = "14px"
     scoreText.style.margin = "0";
     scoreText.setAttribute("id", "crittersbreak-scoreText")
     scoreDiv.appendChild(scoreText);
-    
+
     let coinIcon = document.createElement("img");
     coinIcon.src = chrome.runtime.getURL('assets/coin.png');
     coinIcon.style.height = "16px"
     coinIcon.style.width = "16px"
     scoreDiv.appendChild(coinIcon);
-    
+
     let windowInstructions = document.createElement("p");
     windowInstructions.innerHTML = "Take a break! Place your cursor in the box above. \n (You may remove your cursor anytime)"
     windowInstructions.setAttribute("id", "crittersbreak-windowInstructions");
@@ -184,7 +189,6 @@ function renderWindow() { // render window for sprite animation
 
 
     let critterSprite = document.createElement("img");
-    critterSprite.src = chrome.runtime.getURL('assets/critters/sir-teddy/idle.gif');
     critterSprite.style.height = "60%";
     critterSprite.style.transform = "translateY(20px)";
     critterSprite.setAttribute("id", "crittersbreak-critterSprite")
@@ -198,26 +202,36 @@ function renderWindow() { // render window for sprite animation
         mouseOffCritter();
     })
 
+    chrome.storage.sync.get("critters").then((result) => {
+        chrome.storage.sync.get("activeCritter").then((res) => {
+            critterSprite.src = chrome.runtime.getURL(`assets/critters/${result.critters[res.activeCritter].folder}/idle.gif`);
+        })
+    })
 
 }
 
 function mouseOnCritter() {
     let sprite = document.getElementById("crittersbreak-critterSprite");
-    sprite.src = chrome.runtime.getURL('assets/critters/sir-teddy/playing.gif');
+   
+    chrome.storage.sync.get("critters").then((result) => {
+        chrome.storage.sync.get("activeCritter").then((res) => {
+            sprite.src = chrome.runtime.getURL(`assets/critters/${result.critters[res.activeCritter].folder}/playing.gif`);
+        })
+    })
     rewardTimer = setInterval(() => {
         chrome.storage.sync.get("coins").then((result) => {
             if (result.coins === undefined) {
-                chrome.storage.sync.set({coins: 2});
+                chrome.storage.sync.set({ coins: 2 });
             } else {
-                chrome.storage.sync.set({coins: result.coins + 2});
+                chrome.storage.sync.set({ coins: result.coins + 2 });
             }
 
             chrome.storage.sync.get("coinsEarned").then((result) => {
                 if (result.coinsEarned === undefined) {
-                    chrome.storage.sync.set({coinsEarned: 2});
+                    chrome.storage.sync.set({ coinsEarned: 2 });
                     document.getElementById("crittersbreak-scoreText").innerHTML = "+2";
                 } else {
-                    chrome.storage.sync.set({coinsEarned: result.coinsEarned + 2});
+                    chrome.storage.sync.set({ coinsEarned: result.coinsEarned + 2 });
                     document.getElementById("crittersbreak-scoreText").innerHTML = `+${result.coinsEarned + 2}`;
 
                 }
@@ -228,7 +242,11 @@ function mouseOnCritter() {
 
 function mouseOffCritter() {
     let sprite = document.getElementById("crittersbreak-critterSprite");
-    sprite.src = chrome.runtime.getURL('assets/critters/sir-teddy/idle.gif');
+    chrome.storage.sync.get("critters").then((result) => {
+        chrome.storage.sync.get("activeCritter").then((res) => {
+            sprite.src = chrome.runtime.getURL(`assets/critters/${result.critters[res.activeCritter].folder}/idle.gif`);
+        })
+    })
     clearInterval(rewardTimer);
 }
 
@@ -260,7 +278,7 @@ async function dimScreen() {
         elDim.style.display = 'block';
         var op = parseFloat(elDim.style.opacity);  // initial opacity
         intervalTimer = setInterval(function () {
-            if (op >= 0.95){
+            if (op >= 0.95) {
                 clearInterval(intervalTimer);
             }
             elDim.style.opacity = op;
@@ -275,7 +293,7 @@ function brightenScreen() {
     var elDim = document.getElementById("crittersbreak-dim");
     var op = parseFloat(elDim.style.opacity);  // initial opacity
     intervalTimer = setInterval(function () {
-        if (op <= 0.1){
+        if (op <= 0.1) {
             clearInterval(intervalTimer);
             elDim.style.display = 'none';
         }
@@ -297,7 +315,7 @@ function revealWindow() {
         elWindow.style.display = 'flex';
         var op = parseFloat(elWindow.style.opacity);  // initial opacity
         var timer = setInterval(function () {
-            if (op >= 1){
+            if (op >= 1) {
                 clearInterval(timer);
             }
             elWindow.style.opacity = op;
@@ -312,7 +330,7 @@ function hideWindow() {
     if (elWindow.style.opacity > 0.9) {
         var op = parseFloat(elWindow.style.opacity);  // initial opacity
         var timer = setInterval(function () {
-            if (op <= 0.1){
+            if (op <= 0.1) {
                 clearInterval(timer);
                 elWindow.style.display = 'none';
             }
@@ -350,13 +368,13 @@ async function startTimer() {
             var minutesStr = "" + minutesNum;
             if (minutesNum == 0) minutesStr = "00"
             else if (minutesNum < 10) minutesStr = "0" + minutesStr;
-        
+
             // Calculate seconds
             let secondsNum = time - (minutesNum * 60);
             var secondsStr = "" + secondsNum;
             if (secondsNum == 0) secondsStr = "00"
             else if (secondsNum < 10) secondsStr = "0" + secondsStr;
-        
+
             // Update display with time
             if (document.getElementById("crittersBreak-timeDisplay") != null) document.getElementById("crittersBreak-timeDisplay").innerHTML = minutesStr + ":" + secondsStr;
         } else { // timer goes to zero
